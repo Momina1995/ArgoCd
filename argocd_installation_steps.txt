@@ -1,0 +1,33 @@
+# to be ran in a kubernetes server
+
+# installing argocd
+kubectl create namespace argocd
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.3.18/manifests/install.yaml
+
+
+# changing the service from clusterIP to NodePort
+k -n argocd edit svc argocd-server 
+
+
+#access with kubernetes IP:port of the argocd-server service
+
+# credentials for argocd ui
+
+k -n argocd get secret
+k -n argocd get secrets argocd-initial-admin-secret -o json | jq .data.password -r | base64 -d     #decrypting the password from secrets. Update the password from UI
+
+# installing cli  
+# under assets section from releases url
+
+wget https://github.com/argoproj/argo-cd/releases/download/v3.3.18/argocd-linux-amd64
+
+mv argocd-linux-amd64 argocd
+chmod +x argocd
+mv argocd /usr/local/bin/
+
+#using cli
+
+argocd login <clusterip address of argocd-server service>   #give UI creds
+
+argocd app list
+argocd cluster list
