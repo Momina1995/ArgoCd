@@ -1,1 +1,61 @@
+step 1 :  create a ec2 instance with c7i-flex-large
+
+step2: switch to root user
+
+step 3: install rancher - single node kubernetes 
+
+vi rancher.sh
+
+-----
+#! /bin/bash
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl wget git apt-transport-https ca-certificates gnupg lsb-release
+sudo swapoff -a
+sudo sed -i '/swap/d' /etc/fstab
+curl -sfL https://get.k3s.io | sh -
+sudo kubectl get nodes
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown $USER:$USER ~/.kube/config
+kubectl get pods -A
+
+-----
+
+sh rancher.sh
+
+step 4 :INSTALLATION OF HELM:
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm version
+
+
+STEP-5: INSTALL ARGO CD USING HELM
+helm repo add argo-cd https://argoproj.github.io/argo-helm
+helm repo update
+kubectl create namespace argocd
+helm install argocd argo-cd/argo-cd -n argocd 
+kubectl get all -n argocd
+
+step 6: EXPOSE ARGOCD SERVER: Note: if it is multinode user LoadBalancer
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'    
+kubectl get all -n argocd
+
+Step 7 : open the port of argocd-server for the  EC2 instance
+
+step8: opening the argocd console
+
+<public-ip of the ec2 instance>:<port number of the argocd-server service>
+
+16.16.170.60:32028   #example
+
+
+step 9:creds
+username: admin
+passowd: 
+
+command to get the password
+kubectl -n argocd get secret argocd-initial-admin-secret -o json | jq .data.password -r | base64 -d; echo
+
 
